@@ -1,9 +1,36 @@
 #!/usr/bin/env python3
 
-import gym
+import gymnasium as gym
 import numpy as np
-import mujoco_py
-from gym.envs.robotics import rotations
+import mujoco
+
+
+_FLOAT_EPS = np.finfo(np.float64).eps
+
+def quat2mat(quat):
+    """ Convert Quaternion to Euler Angles.  See rotation.py for notes """
+    quat = np.asarray(quat, dtype=np.float64)
+    assert quat.shape[-1] == 4, "Invalid shape quat {}".format(quat)
+
+    w, x, y, z = quat[..., 0], quat[..., 1], quat[..., 2], quat[..., 3]
+    Nq = np.sum(quat * quat, axis=-1)
+    s = 2.0 / Nq
+    X, Y, Z = x * s, y * s, z * s
+    wX, wY, wZ = w * X, w * Y, w * Z
+    xX, xY, xZ = x * X, x * Y, x * Z
+    yY, yZ, zZ = y * Y, y * Z, z * Z
+
+    mat = np.empty(quat.shape[:-1] + (3, 3), dtype=np.float64)
+    mat[..., 0, 0] = 1.0 - (yY + zZ)
+    mat[..., 0, 1] = xY - wZ
+    mat[..., 0, 2] = xZ + wY
+    mat[..., 1, 0] = xY + wZ
+    mat[..., 1, 1] = 1.0 - (xX + zZ)
+    mat[..., 1, 2] = yZ - wX
+    mat[..., 2, 0] = xZ - wY
+    mat[..., 2, 1] = yZ + wX
+    mat[..., 2, 2] = 1.0 - (xX + yY)
+    return np.where((Nq > _FLOAT_EPS)[..., np.newaxis, np.newaxis], mat, np.eye(3))
 
 class AntContactsWrapper(gym.Wrapper):
     def __init__(self, env, task, desired_speed=1.0, include_contacts=True,mod_done=True,no_done=False):
@@ -26,11 +53,11 @@ class AntContactsWrapper(gym.Wrapper):
 
     def _update_contacts(self):
         # with mujoco200 + mujoco_py >= 2.0.0, need to calculate contacts
-        mujoco_py.functions.mj_rnePostConstraint(self.env.sim.model, self.env.sim.data)
+        mujoco.mj_rnePostConstraint(self.env.sim.model, self.env.sim.data)
 
     def _done(self,state):
         quat = state[3:7]
-        zz = rotations.quat2mat(quat)[2,2]
+        zz = quat2mat(quat)[2,2]
         theta = np.arccos(zz)
         z = state[2]
 
@@ -51,7 +78,7 @@ class AntContactsWrapper(gym.Wrapper):
     def _upright(self,state):
         # 0 = upright, -1 = upside down, decay between _upright_theta and pi
         quat = state[3:7]
-        zz = rotations.quat2mat(quat)[2,2]
+        zz = quat2mat(quat)[2,2]
         theta = np.arccos(zz)
 
         if theta > self._upright_theta:

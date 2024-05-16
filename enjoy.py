@@ -8,7 +8,7 @@ import torch
 import numpy as np
 import random
 import pickle
-import gym
+import gymnasium as gym
 import argparse
 import matplotlib.pyplot as plt
 
@@ -151,7 +151,7 @@ if __name__ == '__main__':
     states = []
     for ep_num in range(args.iters):
         ep_states = []
-        state = env.reset()
+        state, _ = env.reset()
         if save_states: ep_states.append(state)
         if not(base_method == 'sac'):
             planner.reset()
@@ -163,7 +163,7 @@ if __name__ == '__main__':
                 action = policy_net.get_action(state.copy())
             else:
                 action = planner(state.copy())
-            state, reward, done, _ = env.step(action.copy())
+            state, reward, done, _, _ = env.step(action.copy())
             if not args.pointmass:
                 if args.render:
                     try:

@@ -59,6 +59,9 @@ def end_test():
             torch.save(policy_net.state_dict(), path + 'policy_' + 'final' + '.pt')
         else:
             torch.save(model.state_dict(), path + 'model_' + 'final' + '.pt')
+            inputs = (torch.rand(config['planner']['horizon'], state_dim, device=device),
+                      torch.rand(config['planner']['horizon'], action_dim, device=device))
+            torch.onnx.export(model, inputs, path + 'model_' + 'final' + '.onnx')
             pickle.dump(model_optim.log, open(path + 'optim_data'+ '.pkl', 'wb'))
 
         # save duration
@@ -103,7 +106,7 @@ def handler(signal_received, frame):
 
 # eval function
 def eval():
-    state = env.reset()
+    state, _ = env.reset(seed=args.seed)
     if not(base_method == 'sac' ):
         planner.reset()
 
@@ -114,12 +117,12 @@ def eval():
             action = policy_net.get_action(state,eval=True)
         else:
             action = planner(state,eval=True)
-        state, reward, done, _ = env.step(action.copy())
+        state, reward, done, _, _ = env.step(action.copy())
         episode_reward += reward
         if args.pointmass:
             states.append(state)
         elif args.render:
-            env.render(mode="human")
+            env.render()
         if args.done_util:
             if done:
                 break
@@ -293,7 +296,7 @@ if __name__ == '__main__':
     ep_num = 0
     while (frame_idx < max_frames):
         ep_start_time = time.time()
-        state = env.reset()
+        state, _ = env.reset(seed=args.seed)
         if frame_idx < RANDOM_FRAMES:
             action = get_random_action()
             if frame_idx == RANDOM_FRAMES-1:
@@ -309,7 +312,7 @@ if __name__ == '__main__':
         done = False
         states = []
         for step in range(max_steps):
-            next_state, reward, done, _ = env.step(action.copy())
+            next_state, reward, done, _, _ = env.step(action.copy())
 
             # get next action
             if frame_idx < RANDOM_FRAMES:
@@ -347,7 +350,7 @@ if __name__ == '__main__':
             if args.pointmass:
                 states.append(state)
             elif args.render:
-                env.render(mode="human")
+                env.render()
 
             if update_H and (frame_idx % config['H_sequence']['steps'][H_seq_idx] == 0):
                 if args.pointmass:

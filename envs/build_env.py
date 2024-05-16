@@ -4,10 +4,11 @@ __all__=['env_list','getlist','build_env']
 
 ''' load environments '''
 # environments
-from gym.envs import mujoco
-from gym.envs.mujoco.swimmer_v3 import SwimmerEnv
-from gym.envs.mujoco.ant_v3 import AntEnv
-from gym.envs.mujoco.half_cheetah_v3 import HalfCheetahEnv
+from gymnasium.envs import mujoco
+from gymnasium.envs.mujoco.swimmer_v3 import SwimmerEnv
+from gymnasium.envs.mujoco.ant_v3 import AntEnv
+from gymnasium.envs.mujoco.half_cheetah_v3 import HalfCheetahEnv
+from gymnasium.envs.mujoco.half_cheetah_v4 import HalfCheetahEnv as HalfCheetahEnv_v4
 
 env_list = {
     'HalfCheetahEnv' : mujoco.HalfCheetahEnv,
@@ -16,6 +17,8 @@ env_list = {
     'SwimmerEnv_v3' : SwimmerEnv,
     'AntEnv_v3' : AntEnv,
     'HalfCheetahEnv_v3' : HalfCheetahEnv,
+    # v4 (new mujoco bindings)
+    'HalfCheetahEnv_v4' : HalfCheetahEnv_v4,
 }
 
 def getlist():
@@ -59,7 +62,7 @@ def build_env(args,config,device):
             env_args['xml_file'] = args.xml
         if not('done_util' in args.__dict__.keys()):
             args.done_util = True
-        env_args['render']= args.render
+        env_args['render_mode']= "human" if args.render else None
         if args.v3:
             env_args['exclude_current_positions_from_observation']= False
             env_args['terminate_when_unhealthy']= args.done_util
@@ -93,7 +96,7 @@ def build_env(args,config,device):
         try:
             env = NormalizedActions(env_list[env_name](**env_args))
         except TypeError as err:
-            del env_args['render']
+            del env_args['render_mode']
             try:
                 env = NormalizedActions(env_list[env_name](**env_args))
             except TypeError as err:
@@ -108,5 +111,4 @@ def build_env(args,config,device):
         action_dim = env.action_space.shape[0]
         state_dim  = env.observation_space.shape[0]
 
-    env.seed(args.seed)
     return env, env_name, action_dim, state_dim, traj, viewer
