@@ -13,3 +13,4 @@ local*
 data/vid/*
 !run_docker.sh
 !run_docker.bat
+results/

@@ -9,6 +9,7 @@ from gymnasium.envs.mujoco.swimmer_v3 import SwimmerEnv
 from gymnasium.envs.mujoco.ant_v3 import AntEnv
 from gymnasium.envs.mujoco.half_cheetah_v3 import HalfCheetahEnv
 from gymnasium.envs.mujoco.half_cheetah_v4 import HalfCheetahEnv as HalfCheetahEnv_v4
+from pybullet_envs.gym_locomotion_envs import HalfCheetahBulletEnv
 
 env_list = {
     'HalfCheetahEnv' : mujoco.HalfCheetahEnv,
@@ -19,6 +20,8 @@ env_list = {
     'HalfCheetahEnv_v3' : HalfCheetahEnv,
     # v4 (new mujoco bindings)
     'HalfCheetahEnv_v4' : HalfCheetahEnv_v4,
+    # PyBullet
+    'HalfCheetahBulletEnv_v0' : HalfCheetahBulletEnv,
 }
 
 def getlist():
@@ -62,7 +65,11 @@ def build_env(args,config,device):
             env_args['xml_file'] = args.xml
         if not('done_util' in args.__dict__.keys()):
             args.done_util = True
-        env_args['render_mode']= "human" if args.render else None
+        if args.render:
+            if env_name == "HalfCheetahBulletEnv_v0":
+                env_args['render'] = True 
+            else:
+                env_args['render_mode'] = "human"
         if args.v3:
             env_args['exclude_current_positions_from_observation']= False
             env_args['terminate_when_unhealthy']= args.done_util

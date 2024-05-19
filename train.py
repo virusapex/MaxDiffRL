@@ -127,7 +127,7 @@ def eval():
             if done:
                 break
     step += 1
-    cprint('eval: {} {}'.format(episode_reward, step),'cyan')
+    cprint('Eval: Ep_rew {} gained in {} steps'.format(episode_reward, step),'cyan')
     return states, episode_reward, step
 
 
@@ -186,7 +186,7 @@ if __name__ == '__main__':
     from envs import build_env
     env, env_name, action_dim, state_dim, traj, viewer = build_env(args,config,device)
     cprint(env,'green')
-    print('actions states',action_dim,state_dim)
+    print(f'Action dim: {action_dim}, State dim: {state_dim}')
 
     # load models / policies / controllers
     from envs import ReplayBuffer
@@ -404,7 +404,7 @@ if __name__ == '__main__':
             step += 1
             ep_time = time.time()-ep_start_time
             print('frame : {}/{}, \t {:.2f} seconds'.format(frame_idx, max_frames, ep_time))
-            print('ep rew', ep_num, episode_reward, frame_idx, step)
+            print(f'Episode №{ep_num} Ep_rew: {episode_reward} Total steps so far: {frame_idx}')
             rewards.append([frame_idx, episode_reward,ep_num])
             ep_num += 1
             if (ep_num % eval_freq == 0) and (frame_idx > frames_before_learning):

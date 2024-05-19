@@ -87,6 +87,22 @@ HalfCheetahEnv_v4:
     reward_layers: [200,200]
     name_mod: "_H10_alpha5"
 
+HalfCheetahBulletEnv_v0:
+    max_frames: 1000000
+    frame_skip: 1
+    render_mode: "human"
+    planner:
+        explr_dim: [0,1,9,10]
+        weights: [1.,1.0,0.05,0.05]
+        horizon: 10
+        alpha: 5
+        lam: 0.5
+        samples: 500
+        window: False
+    model_layers: [200,200]
+    reward_layers: [200,200]
+    name_mod: "_H10_alpha5"
+
 PointMass2D_DoubleIntEnv:
     max_frames: 100000
     max_steps: 1000
